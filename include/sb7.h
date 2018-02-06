@@ -185,7 +185,7 @@ public:
         info.minorVersion = 2;
 #else
         info.majorVersion = 4;
-        info.minorVersion = 3;
+        info.minorVersion = 0;	//3;
 #endif
         info.samples = 0;
         info.flags.all = 0;
