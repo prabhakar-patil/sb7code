@@ -32,6 +32,7 @@
 
     #define WIN32_LEAN_AND_MEAN 1
     #include <Windows.h>
+	#include <Winternl.h>
 #else
     #include <unistd.h>
     #define Sleep(t) sleep(t)
@@ -43,10 +44,14 @@
 #define GLFW_INCLUDE_GLCOREARB 1
 
 #include "GLFW/glfw3.h"
+#include "NATIVE/nativew.h"		//Native Windowing as opposed to GLFW
+
 
 #include "sb7ext.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <string.h>
 #include <math.h>
 
@@ -72,14 +77,16 @@ public:
         bool running = true;
         app = the_app;
 
+#if 0
         if (!glfwInit())
         {
             fprintf(stderr, "Failed to initialize GLFW\n");
             return;
         }
+#endif
 
         init();
-
+#if 0
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, info.majorVersion);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, info.minorVersion);
 
@@ -119,7 +126,14 @@ public:
                 return;
             }
         }
+#endif
+		time_t t;
+		srand((unsigned)time(&t));
 
+		nativeCreateWindow(info.windowWidth, info.windowHeight, info.title);
+		nativeInitialize();
+
+#if 0
         glfwMakeContextCurrent(window);
 
         glfwSetWindowSizeCallback(window, glfw_onResize);
@@ -133,8 +147,9 @@ public:
         }
 
         // info.flags.stereo = (glfwGetWindowParam(GLFW_STEREO) ? 1 : 0);
-
+#endif
         gl3wInit();
+
 
 #ifdef _DEBUG
         fprintf(stderr, "VENDOR: %s\n", (char *)glGetString(GL_VENDOR));
@@ -157,22 +172,29 @@ public:
         }
 
         startup();
-
+		
         do
         {
-            render(glfwGetTime());
-
+			render(nativeGetTime());
+			nativeSwapBuffers();
+			running = nativePollEvents();
+#if 0
+			render(glfwGetTime());
             glfwSwapBuffers(window);
             glfwPollEvents();
 
             running &= (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE);
             running &= (glfwWindowShouldClose(window) != GL_TRUE);
+#endif 
         } while (running);
 
         shutdown();
+		nativeUninitialize();
 
+#if 0
         glfwDestroyWindow(window);
         glfwTerminate();
+#endif
     }
 
     virtual void init()
