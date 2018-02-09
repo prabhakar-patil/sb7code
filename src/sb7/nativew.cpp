@@ -9,6 +9,7 @@ Programmable Pipeline OpenGL Code
 ***************************************/
 #include <windows.h>
 #include <stdio.h>	// for FILE
+#include "NATIVE\nativew.h"
 
 #if 0
 	#include <GL/glew.h>	// for GLSL extensions. MUST be include before gl.h
@@ -57,6 +58,13 @@ bool gbFullscreen = false;
 int gWinWidth;
 int gWinHeight;
 WINDOWPLACEMENT wpPrev = { sizeof(WINDOWPLACEMENT) };
+
+//Timing related
+double gd_resolution;
+unsigned __int64 gu64_base;
+
+//Callbacks
+PFN_RESIZE gFnResize = NULL;
 
 #if 0
 GLfloat g_anglePyramid = 0.0f;
@@ -301,6 +309,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_SIZE:
 		//resize(LOWORD(lParam), HIWORD(lParam));
+		if (gFnResize)
+			gFnResize(NULL, LOWORD(lParam), HIWORD(lParam));
 		break;
 	case WM_ERASEBKGND:
 		return (0);
@@ -430,16 +440,41 @@ void nativeUninitialize(void)
 	}
 }
 
-double nativeGetTime(void)
+void nativeInitTimer(void)
 {
-	LONGLONG cntPerSec = 0;
-	QueryPerformanceCounter((LARGE_INTEGER*)&cntPerSec);
+	unsigned __int64 frequency;
 
-	return ((double)cntPerSec);
+    if (QueryPerformanceFrequency((LARGE_INTEGER*) &frequency))
+    {
+		gd_resolution = 1.0 / (double) frequency;
+    }
+	else
+	{
+		gd_resolution = 0.001; //default we will select
+	}
+
+	unsigned __int64 time;
+    QueryPerformanceCounter((LARGE_INTEGER*) &time);
+	gu64_base = time;
 }
 
+double nativeGetTime(void)
+{
+	double dt = 0.0;
+	unsigned __int64 time;
+    QueryPerformanceCounter((LARGE_INTEGER*) &time);
+
+	dt = (time - gu64_base)*gd_resolution;
+	return dt;
+}
+
+void nativeSetWindowSizeCallback(PFN_RESIZE pfn_resize)
+{
+	gFnResize = pfn_resize;
+}
 void ToggleFullScreen(void)
 {
+#if 1
 	// variable declarations
 	MONITORINFO mi;
 
@@ -470,6 +505,7 @@ void ToggleFullScreen(void)
 		ShowCursor(true);
 		gbFullscreen = false;
 	}
+#endif
 }
 
 

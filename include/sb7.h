@@ -50,8 +50,6 @@
 #include "sb7ext.h"
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include <string.h>
 #include <math.h>
 
@@ -127,11 +125,10 @@ public:
             }
         }
 #endif
-		time_t t;
-		srand((unsigned)time(&t));
-
+		nativeInitTimer();
 		nativeCreateWindow(info.windowWidth, info.windowHeight, info.title);
 		nativeInitialize();
+		nativeSetWindowSizeCallback((PFN_RESIZE)glfw_onResize);
 
 #if 0
         glfwMakeContextCurrent(window);
